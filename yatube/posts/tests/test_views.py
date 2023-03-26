@@ -264,7 +264,8 @@ class TaskPagesTests(TestCase):
             reverse('posts:profile_unfollow',
                     kwargs={'username': self.another_user.username}))
         fol_num_after_unfol = Follow.objects.count()
-        self.assertEqual(fol_num_after_unfol, fol_num_after - settings.ONE_POST)
+        self.assertEqual(
+            fol_num_after_unfol, fol_num_after - settings.ONE_POST)
 
     def test_new_post_follower(self):
         """Пост появляется в ленте подписчика"""
