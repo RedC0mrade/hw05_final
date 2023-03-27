@@ -78,9 +78,9 @@ class Comment(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Комментарий'
-        verbose_name_plural = 'Комментарии',
         ordering = ('-created',)
+        verbose_name = 'Комментарий',
+        verbose_name_plural = 'Comment'
 
 
 class Follow(models.Model):
@@ -100,5 +100,5 @@ class Follow(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Подписка',
-        verbose_name_plural = 'Подписки'
+        verbose_name = 'Follow',
+        verbose_name_plural = 'Following'

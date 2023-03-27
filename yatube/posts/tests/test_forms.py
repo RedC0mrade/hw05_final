@@ -139,16 +139,21 @@ class PostFormTest(TestCase):
 
         comment_form = {'text': 'Hi! Comment.'}
 
-        num_comment_before = Comment.objects.count()
+        set_ids_before = set(Comment.objects.values_list('id', flat=True))
 
         self.authorized_client.post(
             reverse('posts:add_comment',
                     kwargs={'post_id': self.create_post.id}),
             data=comment_form)
-        num_comment_after = Comment.objects.count()
-        self.assertEqual(Comment.objects.first().text, comment_form['text'])
-        self.assertEqual(num_comment_after,
-                         num_comment_before + settings.ONE_POST)
+
+        set_ids_after = set(Comment.objects.values_list('id', flat=True))
+
+        self.assertEqual(len([set_ids_after]), settings.ONE_POST)
+
+        id_comment = list(set(set_ids_after) - set(set_ids_before))[0]
+        comment = Comment.objects.select_related('author').get(pk=id_comment)
+
+        self.assertEqual(comment.text, comment_form['text'])
 
     def test_add_comment_post_detail_clien(self):
         """Изменение комментария не зарегистрированым пользователем"""

@@ -1,5 +1,4 @@
 import tempfile
-from time import sleep
 import shutil
 
 from django.test import Client, override_settings, TestCase
@@ -7,10 +6,19 @@ from django.urls import reverse
 from django import forms
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.cache import cache
 
 from ..models import Follow, Group, Post, User
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
+
+
+def check_context(self, page_obj):
+    self.assertEqual(page_obj.author, self.post.author)
+    self.assertEqual(page_obj.group, self.post.group)
+    self.assertEqual(page_obj.id, self.post.id)
+    self.assertEqual(page_obj.text, self.post.text)
+    self.assertEqual(page_obj.image, self.post.image)
 
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
@@ -100,11 +108,7 @@ class TaskPagesTests(TestCase):
         response = self.authorized_client.get(reverse('posts:index'))
         page_obj = response.context['page_obj'][settings.FIRST_OBJECT]
 
-        self.assertEqual(page_obj.author, self.post.author)
-        self.assertEqual(page_obj.group, self.post.group)
-        self.assertEqual(page_obj.id, self.post.id)
-        self.assertEqual(page_obj.text, self.post.text)
-        self.assertEqual(page_obj.image, self.post.image)
+        check_context(self, page_obj)
 
     def test_group_list_context(self):
         """Проверка Group list использует правильные данные в контекст."""
@@ -114,42 +118,32 @@ class TaskPagesTests(TestCase):
         page_obj = response.context['page_obj'][settings.FIRST_OBJECT]
         group_obj = response.context['group']
 
-        self.assertEqual(page_obj, self.post)
-        self.assertEqual(page_obj.author, self.post.author)
-        self.assertEqual(page_obj.group, self.post.group)
-        self.assertEqual(page_obj.id, self.post.id)
-        self.assertEqual(page_obj.text, self.post.text)
+        check_context(self, page_obj)
         self.assertEqual(group_obj, self.post.group)
-        self.assertEqual(page_obj.image, self.post.image)
 
     def test_profile_context(self):
         """Проверка Profile использует правильный контекст."""
+        Follow.objects.create(author=self.follow_user, user=self.user)
+
         response = self.authorized_client.get(
             reverse('posts:profile', kwargs={'username': self.user}))
 
         page_obj = response.context['page_obj'][settings.FIRST_OBJECT]
         author_obj = response.context['author']
+        follow_obj = response.context['following']
 
-        self.assertEqual(page_obj.author, self.post.author)
-        self.assertEqual(page_obj.group, self.post.group)
-        self.assertEqual(page_obj.id, self.post.id)
-        self.assertEqual(page_obj.text, self.post.text)
+        check_context(self, page_obj)
         self.assertEqual(author_obj, self.post.author)
-        self.assertEqual(page_obj.image, self.post.image)
+        print(follow_obj)
 
     def test_post_detail_context(self):
         """Проверка Post detail использует правильный контекст."""
         response = self.authorized_client.get(reverse(
             'posts:post_detail', kwargs={'post_id': self.post.id}))
 
-        post = response.context['post']
+        page_obj = response.context['post']
 
-        self.assertEqual(post, self.post)
-        self.assertEqual(post.author, self.post.author)
-        self.assertEqual(post.group, self.post.group)
-        self.assertEqual(post.id, self.post.id)
-        self.assertEqual(post.text, self.post.text)
-        self.assertEqual(post.image, self.post.image)
+        check_context(self, page_obj)
 
     def test_post_create_context(self):
         """Post create page и post_create использует правильный контекст."""
@@ -240,16 +234,16 @@ class TaskPagesTests(TestCase):
         self.assertNotEqual(test_post, page_obj)
 
     def test_index_cache(self):
-        cache = self.client.get(reverse('posts:index')).content
+        cache_content = self.client.get(reverse('posts:index')).content
         Post.objects.create(
             text='Текст для проверки кэша',
             author=self.user
         )
         cache_before_20sec = self.client.get(reverse('posts:index')).content
-        self.assertEqual(cache, cache_before_20sec)
-        sleep(settings.CACHE_SAVE_TIME)
+        self.assertEqual(cache_content, cache_before_20sec)
+        cache.clear()
         cache_after_20sec = self.client.get(reverse('posts:index')).content
-        self.assertNotEqual(cache, cache_after_20sec)
+        self.assertNotEqual(cache_content, cache_after_20sec)
 
     def test_authorized_user_follow(self):
         """Авториз. пользователь может подписаться на автора и отписаться"""
@@ -279,7 +273,6 @@ class TaskPagesTests(TestCase):
         )
         response = self.authorized_client.get(
             reverse('posts:follow_index'))
-        print(response.context['page_obj'][0].author, post.text)
         self.assertEqual(post,
                          response.context['page_obj'][settings.FIRST_OBJECT])
 
@@ -295,7 +288,6 @@ class TaskPagesTests(TestCase):
         )
         response = self.follow_client.get(
             reverse('posts:follow_index'))
-        print(len(response.context['page_obj']))
         self.assertEqual(len(response.context['page_obj']),
                          settings.NOTING_IN_FOLLOW_INDEX)
 
