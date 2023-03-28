@@ -247,18 +247,21 @@ class TaskPagesTests(TestCase):
                     kwargs={'username': self.another_user.username}))
         fol_num_after = Follow.objects.count()
         self.assertEqual(fol_num_after, fol_num_before + settings.ONE_POST)
-        follow = Follow.objects.filter(user=self.user, author=self.another_user)
+        follow = Follow.objects.filter(
+            user=self.user, author=self.another_user)
         self.assertTrue(follow)
 
     def test_authorized_user_unfollow(self):
         """Авториз. пользователь ожет отписаться от автора"""
         Follow.objects.create(user=self.user, author=self.another_user)
-        follow = Follow.objects.filter(user=self.user, author=self.another_user)
+        follow = Follow.objects.filter(
+            user=self.user, author=self.another_user)
         self.assertTrue(follow)
         self.authorized_client.get(
             reverse('posts:profile_unfollow',
                     kwargs={'username': self.another_user.username}))
-        follow = Follow.objects.filter(user=self.user, author=self.another_user)
+        follow = Follow.objects.filter(
+            user=self.user, author=self.another_user)
         self.assertFalse(follow)
 
     def test_new_post_follower(self):
