@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.cache import cache
 
-from ..models import Follow, Group, Post, User
+from ..models import Comment, Follow, Group, Post, User
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -130,19 +130,30 @@ class TaskPagesTests(TestCase):
 
         page_obj = response.context['page_obj'][settings.FIRST_OBJECT]
         author_obj = response.context['author']
+
+        response = self.authorized_client.get(
+            reverse('posts:profile', kwargs={'username': self.follow_user}))
         follow_obj = response.context['following']
 
         check_context(self, page_obj)
         self.assertEqual(author_obj, self.post.author)
-        print(follow_obj)
+        self.assertTrue(follow_obj)
 
     def test_post_detail_context(self):
         """Проверка Post detail использует правильный контекст."""
+        comment = Comment.objects.create(
+            post=self.post,
+            author=self.another_user,
+            text='Комментарий для поста')
+
         response = self.authorized_client.get(reverse(
             'posts:post_detail', kwargs={'post_id': self.post.id}))
 
         page_obj = response.context['post']
 
+        self.assertEqual(
+            response.context['comments'][settings.FIRST_OBJECT].text,
+            comment.text)
         check_context(self, page_obj)
 
     def test_post_create_context(self):
@@ -183,42 +194,23 @@ class TaskPagesTests(TestCase):
                 form_field = response.context.get('form').fields.get(value)
                 self.assertIsInstance(form_field, expected)
 
-    def test_post_in_profile_on_first_position(self):
+    def test_post_in_all_pages_on_first_position(self):
         """Проверка, что пост в profile попадает на первую позицию"""
         test_post = Post.objects.create(
             text='Этот пост должен быть первым',
             author=self.user,
             group=self.group
         )
-        response = self.authorized_client.get(
-            reverse('posts:profile',
-                    kwargs={'username': self.user.username}))
-        page_obj = response.context['page_obj'][settings.FIRST_OBJECT]
-        self.assertEqual(test_post, page_obj)
-
-    def test_post_in_group_list_on_first_position(self):
-        """Проверка, что пост в group_list попадает на первую позицию"""
-        test_post = Post.objects.create(
-            text='Этот пост должен быть первым в группе',
-            author=self.user,
-            group=self.group
-        )
-        response = self.authorized_client.get(
-            reverse('posts:group_list',
-                    kwargs={'slug_name': test_post.group.slug}))
-        page_obj = response.context['page_obj'][settings.FIRST_OBJECT]
-        self.assertEqual(test_post, page_obj)
-
-    def test_post_in_index_on_first_position(self):
-        """Проверка, что пост в Index попадает на первую позицию"""
-        test_post = Post.objects.create(
-            text='Этот пост должен быть первым',
-            author=self.user,
-            group=self.group
-        )
-        response = self.client.get(reverse('posts:index', ))
-        page_obj = response.context['page_obj'][settings.FIRST_OBJECT]
-        self.assertEqual(test_post, page_obj)
+        reverses = [reverse('posts:profile',
+                    kwargs={'username': self.user.username}),
+                    reverse('posts:group_list',
+                            kwargs={'slug_name': test_post.group.slug}),
+                    reverse('posts:index', )]
+        for i in reverses:
+            with self.subTest(address=i):
+                response = self.client.get(i)
+                page_obj = response.context['page_obj'][settings.FIRST_OBJECT]
+                self.assertEqual(test_post, page_obj)
 
     def test_new_post_in_right_group(self):
         """Проверка на то что новый пост не попадает в чужую группу"""
@@ -234,6 +226,7 @@ class TaskPagesTests(TestCase):
         self.assertNotEqual(test_post, page_obj)
 
     def test_index_cache(self):
+        """Тест кэша"""
         cache_content = self.client.get(reverse('posts:index')).content
         Post.objects.create(
             text='Текст для проверки кэша',
@@ -246,7 +239,7 @@ class TaskPagesTests(TestCase):
         self.assertNotEqual(cache_content, cache_after_20sec)
 
     def test_authorized_user_follow(self):
-        """Авториз. пользователь может подписаться на автора и отписаться"""
+        """Авториз. пользователь может подписаться на автора"""
 
         fol_num_before = Follow.objects.count()
         self.authorized_client.get(
@@ -254,18 +247,23 @@ class TaskPagesTests(TestCase):
                     kwargs={'username': self.another_user.username}))
         fol_num_after = Follow.objects.count()
         self.assertEqual(fol_num_after, fol_num_before + settings.ONE_POST)
+        follow = Follow.objects.filter(user=self.user, author=self.another_user)
+        self.assertTrue(follow)
+
+    def test_authorized_user_unfollow(self):
+        """Авториз. пользователь ожет отписаться от автора"""
+        Follow.objects.create(user=self.user, author=self.another_user)
+        follow = Follow.objects.filter(user=self.user, author=self.another_user)
+        self.assertTrue(follow)
         self.authorized_client.get(
             reverse('posts:profile_unfollow',
                     kwargs={'username': self.another_user.username}))
-        fol_num_after_unfol = Follow.objects.count()
-        self.assertEqual(
-            fol_num_after_unfol, fol_num_after - settings.ONE_POST)
+        follow = Follow.objects.filter(user=self.user, author=self.another_user)
+        self.assertFalse(follow)
 
     def test_new_post_follower(self):
         """Пост появляется в ленте подписчика"""
-        self.authorized_client.get(
-            reverse('posts:profile_follow',
-                    kwargs={'username': self.another_user.username}))
+        Follow.objects.create(user=self.user, author=self.another_user)
         post = Post.objects.create(
             text='пост для подписчика',
             author=self.another_user,
@@ -288,8 +286,7 @@ class TaskPagesTests(TestCase):
         )
         response = self.follow_client.get(
             reverse('posts:follow_index'))
-        self.assertEqual(len(response.context['page_obj']),
-                         settings.NOTING_IN_FOLLOW_INDEX)
+        self.assertFalse(response.context['page_obj'])
 
 
 class PaginatorViewTest(TestCase):
