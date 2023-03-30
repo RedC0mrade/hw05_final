@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load thumbnail %}
 {% block title %}
-  Пост<p>{{ post.text|safe|linebreaksbr|truncatechars:30 }}</p>
+  Пост {{ post.text|safe|linebreaksbr|truncatechars:30 }}
 {% endblock %}
 {% block content %}
   {% load user_filters %}

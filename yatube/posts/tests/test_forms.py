@@ -153,6 +153,8 @@ class PostFormTest(TestCase):
         id_comment = list(set(set_ids_after) - set(set_ids_before))[0]
         comment = Comment.objects.select_related('author').get(pk=id_comment)
 
+        self.assertEqual(comment.post, self.create_post)
+        self.assertEqual(comment.author, self.create_post.author)
         self.assertEqual(comment.text, comment_form['text'])
 
     def test_add_comment_post_detail_clien(self):

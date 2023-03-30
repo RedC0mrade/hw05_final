@@ -13,14 +13,6 @@ from ..models import Comment, Follow, Group, Post, User
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
-def check_context(self, page_obj):
-    self.assertEqual(page_obj.author, self.post.author)
-    self.assertEqual(page_obj.group, self.post.group)
-    self.assertEqual(page_obj.id, self.post.id)
-    self.assertEqual(page_obj.text, self.post.text)
-    self.assertEqual(page_obj.image, self.post.image)
-
-
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class TaskPagesTests(TestCase):
     @classmethod
@@ -63,6 +55,13 @@ class TaskPagesTests(TestCase):
             group=cls.group,
             image=uploaded,
         )
+
+    def check_attrs(self, page_obj):
+        self.assertEqual(page_obj.author, self.post.author)
+        self.assertEqual(page_obj.group, self.post.group)
+        self.assertEqual(page_obj.id, self.post.id)
+        self.assertEqual(page_obj.text, self.post.text)
+        self.assertEqual(page_obj.image, self.post.image)
 
     def setUp(self):
 
@@ -108,7 +107,7 @@ class TaskPagesTests(TestCase):
         response = self.authorized_client.get(reverse('posts:index'))
         page_obj = response.context['page_obj'][settings.FIRST_OBJECT]
 
-        check_context(self, page_obj)
+        self.check_attrs( page_obj)
 
     def test_group_list_context(self):
         """Проверка Group list использует правильные данные в контекст."""
@@ -118,7 +117,7 @@ class TaskPagesTests(TestCase):
         page_obj = response.context['page_obj'][settings.FIRST_OBJECT]
         group_obj = response.context['group']
 
-        check_context(self, page_obj)
+        self.check_attrs(page_obj)
         self.assertEqual(group_obj, self.post.group)
 
     def test_profile_context(self):
@@ -135,7 +134,7 @@ class TaskPagesTests(TestCase):
             reverse('posts:profile', kwargs={'username': self.follow_user}))
         follow_obj = response.context['following']
 
-        check_context(self, page_obj)
+        self.check_attrs(page_obj)
         self.assertEqual(author_obj, self.post.author)
         self.assertTrue(follow_obj)
 
@@ -151,10 +150,12 @@ class TaskPagesTests(TestCase):
 
         page_obj = response.context['post']
 
+        form_field = response.context.get('form').fields.get('text')
+        self.assertIsInstance(form_field, forms.fields.CharField)
         self.assertEqual(
             response.context['comments'][settings.FIRST_OBJECT].text,
             comment.text)
-        check_context(self, page_obj)
+        self.check_attrs(page_obj)
 
     def test_post_create_context(self):
         """Post create page и post_create использует правильный контекст."""
@@ -240,7 +241,9 @@ class TaskPagesTests(TestCase):
 
     def test_authorized_user_follow(self):
         """Авториз. пользователь может подписаться на автора"""
-
+        follow = Follow.objects.filter(
+            user=self.user, author=self.another_user)
+        self.assertFalse(follow)
         fol_num_before = Follow.objects.count()
         self.authorized_client.get(
             reverse('posts:profile_follow',
@@ -282,14 +285,14 @@ class TaskPagesTests(TestCase):
         self.authorized_client.get(
             reverse('posts:profile_follow',
                     kwargs={'username': self.another_user.username}))
-        Post.objects.create(
+        post = Post.objects.create(
             text='пост для подписчика',
             author=self.another_user,
             group=self.another_group
         )
         response = self.follow_client.get(
             reverse('posts:follow_index'))
-        self.assertFalse(response.context['page_obj'])
+        self.assertNotIn(post, response.context['page_obj'])
 
 
 class PaginatorViewTest(TestCase):
