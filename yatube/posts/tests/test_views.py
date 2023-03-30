@@ -107,7 +107,7 @@ class TaskPagesTests(TestCase):
         response = self.authorized_client.get(reverse('posts:index'))
         page_obj = response.context['page_obj'][settings.FIRST_OBJECT]
 
-        self.check_attrs( page_obj)
+        self.check_attrs(page_obj)
 
     def test_group_list_context(self):
         """Проверка Group list использует правильные данные в контекст."""
