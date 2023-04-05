@@ -7,9 +7,10 @@
 
 {% block content %}
   <h1>Посты авторов на которых вы подписаны</h1>
-  {% include 'posts/includes/switcher.html' %}
+  {% include 'posts/includes/switcher.html' with follow=True %}
   {% for post in page_obj %}
-    {% include 'posts/includes/posts.html' with group_link=True %}
+    {% include 'posts/includes/post.html' with group_link=True %}
   {% endfor %}
+  {% if not forloop.last %}<hr>{% endif %}
   {% include 'posts/includes/paginator.html' %}
 {% endblock %}

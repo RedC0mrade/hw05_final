@@ -49,12 +49,10 @@ def profile(request, username):
 def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
 
-    title = 'Пост'
     comments = Comment.objects.select_related('author').filter(post=post)
     form = CommentForm()
     context = {
         'post': post,
-        'title': title,
         'form': form,
         'comments': comments,
     }
