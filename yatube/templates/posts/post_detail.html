@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load thumbnail %}
 {% block title %}
-  Пост<p>{{ post.text|safe|linebreaksbr|truncatechars:30 }}</p>
+  Пост {{ post.text|safe|linebreaksbr|truncatechars:30 }}
 {% endblock %}
 {% block content %}
   {% load user_filters %}
@@ -42,6 +42,8 @@
       </p>
       {% if post.author == request.user %}
         <a class="btn btn-primary" href="{% url 'posts:post_edit' post.id %}">Редактировать
+          запись</a>
+        <a class="btn btn-danger" href="{% url 'posts:post_delete' post.id %}">Удалить
           запись</a>
       {% endif %}
 

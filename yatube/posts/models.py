@@ -36,6 +36,25 @@ class Post(models.Model):
         blank=True
     )
 
+    number_like = models.IntegerField(
+        blank=True,
+        null=True
+    )
+    number_dislike = models.IntegerField(
+        blank=True,
+        null=True
+    )
+
+    like = models.BooleanField(
+        blank=True,
+        null=True
+    )
+
+    dislike = models.BooleanField(
+        blank=True,
+        null=True
+    )
+
     class Meta:
         ordering = ('-pub_date',)
         verbose_name = 'Пост'
@@ -102,3 +121,25 @@ class Follow(models.Model):
     class Meta:
         verbose_name = 'Follow',
         verbose_name_plural = 'Following'
+
+
+class Likes(models.Model):
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='like_dislike',
+        verbose_name='like_user'
+    )
+
+    post = models.ForeignKey(
+        Post,
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='Like',
+        verbose_name='лайк',
+        help_text='Пост к которому относится лайк'
+    )
+
+
