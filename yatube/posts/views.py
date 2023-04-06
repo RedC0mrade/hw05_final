@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponseRedirect
 
-from .models import Comment, Follow, Group, Post, User
+from .models import Comment, Dislikes, Follow, Group, Likes, Post, User
 from .forms import CommentForm, PostForm
 from .utils import get_page
 
@@ -141,5 +142,14 @@ def post_delete(request, post_id):
 @login_required
 def add_like(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
-    print(post.like)
-    #if post.like==None and post.dislike==None:
+    Likes.objects.get_or_create(user=request.user, post=post)
+    Dislikes.objects.filter(user=request.user, post=post).delete()
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+
+@login_required
+def add_dislike(request, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    Dislikes.objects.get_or_create(user=request.user, post=post)
+    Likes.objects.filter(user=request.user, post=post).delete()
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))

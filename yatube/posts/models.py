@@ -35,25 +35,25 @@ class Post(models.Model):
         upload_to='posts/',
         blank=True
     )
-
-    number_like = models.IntegerField(
-        blank=True,
-        null=True
-    )
-    number_dislike = models.IntegerField(
-        blank=True,
-        null=True
-    )
-
-    like = models.BooleanField(
-        blank=True,
-        null=True
-    )
-
-    dislike = models.BooleanField(
-        blank=True,
-        null=True
-    )
+    #
+    # number_like = models.IntegerField(
+    #     blank=True,
+    #     null=True
+    # )
+    # number_dislike = models.IntegerField(
+    #     blank=True,
+    #     null=True
+    # )
+    #
+    # like = models.BooleanField(
+    #     blank=True,
+    #     null=True
+    # )
+    #
+    # dislike = models.BooleanField(
+    #     blank=True,
+    #     null=True
+    # )
 
     class Meta:
         ordering = ('-pub_date',)
@@ -128,7 +128,7 @@ class Likes(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='like_dislike',
+        related_name='dislikes',
         verbose_name='like_user'
     )
 
@@ -137,9 +137,27 @@ class Likes(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name='Like',
+        related_name='likes',
         verbose_name='лайк',
         help_text='Пост к которому относится лайк'
     )
 
 
+class Dislikes(models.Model):
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='Dislike_dislike',
+        verbose_name='Dislike_user'
+    )
+
+    post = models.ForeignKey(
+        Post,
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='dislikes',
+        verbose_name='Дизлайк',
+        help_text='Пост к которому относится дизлайк'
+    )

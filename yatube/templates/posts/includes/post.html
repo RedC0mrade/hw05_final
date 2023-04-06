@@ -17,14 +17,16 @@
   <p>
     {{ post.text|linebreaksbr }}
   </p>
+
+  {% include 'posts/includes/like.html' %}
+  <br>
+    <a class="btn btn-primary" href="{% url 'posts:post_detail' post.id %}">
+    Подробная информация
+  </a>
+
   {% if post.group and group_link %}
     <a class="btn btn-primary"  href="{% url 'posts:group_list' post.group.slug %}">
       Все записи группы
     </a>
   {% endif %}
-  <br>
-  <br>
-  <a class="btn btn-primary" href="{% url 'posts:post_detail' post.id %}">
-    Подробная информация
-  </a>
 </article>

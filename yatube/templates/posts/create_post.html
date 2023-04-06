@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load user_filters %}
+с
 {% load thumbnail %}
 {% block title %}
   {% if is_edit %}
@@ -20,10 +20,10 @@
         {% endif %}
       </div>
       <div class="card-body">
-      {% include 'posts/includes/form.errors.html' %}
+      {% include 'includes/form.errors.html' %}
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {% include 'posts/includes/fields_in_form.html' %}
+        {% include 'includes/fields_in_form.html' %}
         <div class="d-flex justify-content-end">
           <button type="submit" class="btn btn-primary">
             {% if is_edit %}
