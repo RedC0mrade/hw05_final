@@ -1,6 +1,6 @@
 {% if user.is_authenticated %}
-    <div class="social">
-      <a class="btn btn-danger" href="{% url 'posts:add_dislike' post.id %}"> Dislikes {{ post.dislikes.count }}</a>
+    <div class="social"><a nаme="top"></a>
+      <a class="btn btn-danger" href="{% url 'posts:add_dislike' post.id %}#top"> Dislikes {{ post.dislikes.count }}</a>
       <a class="btn btn-success" href="{% url 'posts:add_like' post.id %}">Likes {{ post.likes.count }}</a>
     </div>
 {% endif %}

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load user_filters %}
+{% load thumbnail %}
+{% block title %}
+  Создание новой группы
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 p-5">
+    <div class="card">
+      <div class="navbar navbar-light" style="background-color: lightskyblue"></div>
+      <div class="card-body">
+      {% include 'includes/form.errors.html' %}
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% include 'includes/fields_in_form.html' %}
+        <div class="d-flex justify-content-end">
+          <button type="submit" class="btn btn-primary">
+            Создать группу
+          </button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

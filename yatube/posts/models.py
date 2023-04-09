@@ -65,7 +65,7 @@ class Post(models.Model):
 
 
 class Group(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(unique=True)
     description = models.TextField()
 

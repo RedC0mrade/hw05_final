@@ -1,6 +1,7 @@
 {% load thumbnail %}
 <article>
   <ul>
+    <a name='top'></a>
     <li>
       Автор: {{ post.author.get_full_name }}
       <a href="{% url 'posts:profile' post.author %}">

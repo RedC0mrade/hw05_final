@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.http import HttpResponseRedirect
 
 from .models import Comment, Dislikes, Follow, Group, Likes, Post, User
-from .forms import CommentForm, PostForm
+from .forms import GroupForm, CommentForm, PostForm
 from .utils import get_page
 
 
@@ -130,6 +130,19 @@ def profile_unfollow(request, username):
     Follow.objects.filter(
         author__username=username, user=request.user).delete()
     return redirect('posts:profile', username=username)
+
+
+@login_required
+def group_create(request):
+    form = GroupForm(
+        request.POST or None,
+        files=request.FILES or None
+    )
+    context = {'form': form}
+    if form.is_valid():
+        group = form.save()
+        return redirect('posts:group_list', group.slug)
+    return render(request, 'posts/group_create.html', context)
 
 
 @login_required
