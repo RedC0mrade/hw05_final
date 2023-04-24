@@ -35,25 +35,6 @@ class Post(models.Model):
         upload_to='posts/',
         blank=True
     )
-    #
-    # number_like = models.IntegerField(
-    #     blank=True,
-    #     null=True
-    # )
-    # number_dislike = models.IntegerField(
-    #     blank=True,
-    #     null=True
-    # )
-    #
-    # like = models.BooleanField(
-    #     blank=True,
-    #     null=True
-    # )
-    #
-    # dislike = models.BooleanField(
-    #     blank=True,
-    #     null=True
-    # )
 
     class Meta:
         ordering = ('-pub_date',)

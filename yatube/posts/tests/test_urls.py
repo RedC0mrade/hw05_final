@@ -41,7 +41,7 @@ class PostURLTests(TestCase):
 
     def test_group_url_location(self):
         """Страница / доступна любому пользователю."""
-        response = self.client.get('/group/test_slag/')
+        response = self.client.get(f'/group/{self.group.slug}/')
         self.assertEqual(response.status_code, 200)
 
     def test_profile_url_lacation(self):

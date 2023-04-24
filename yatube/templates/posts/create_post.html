@@ -2,11 +2,7 @@
 с
 {% load thumbnail %}
 {% block title %}
-  {% if is_edit %}
-    Редактировать запись
-  {% else %}
-    Добавить запись
-  {% endif %}
+  {% if is_edit %}Редактировать запись{% else %}Добавить запись{% endif %}
 {% endblock %}
 {% block content %}
 <div class="row justify-content-center">
